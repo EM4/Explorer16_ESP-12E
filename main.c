@@ -140,18 +140,6 @@ int main(int argc, char** argv) {
                         LATGbits.LATG2=1;                   //Enable pin ESP-12E
                         D4=1;
                     }
-                    if(U1RxBuffer.data[1]=='2'){
-                        LATDbits.LATD0=0;                   //GPIO15
-                        LATDbits.LATD2=0;                   //GPIO0
-                        LATDbits.LATD1=1;                   //GPIO2
-
-                    }
-                    if(U1RxBuffer.data[1]=='3'){
-                        LATDbits.LATD0=0;                   //GPIO15
-                        LATDbits.LATD2=1;                   //GPIO0
-                        LATDbits.LATD1=1;                   //GPIO2
-
-                    }
                     if(U1RxBuffer.data[1]=='4'){
                         init_uart(2,_76800);                /* Inicializacion UART2 - J9 Pins 2,4 */
 
