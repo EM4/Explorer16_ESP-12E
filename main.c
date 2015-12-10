@@ -16,6 +16,7 @@
 #include <Rtcc.h>
 #include "explorer16.h"
 #include "xlcd.h"
+#include "ESP8266.h"
 
 /* Configuraciones globales para el microcontrolador */
 _CONFIG1(JTAGEN_OFF & GCP_OFF & GWRP_OFF & BKBUG_OFF & ICS_PGx2 & FWDTEN_OFF & WINDIS_OFF & FWPSA_PR128 & WDTPS_PS256)
@@ -40,6 +41,9 @@ unsigned int i;
 unsigned char string[50];
 unsigned char *pString;
 unsigned int vTemp;
+unsigned char ssid[]="SES";
+unsigned char psswd[]="WirelssSES#0123";
+
 rtccTime RtccTime;
 rtccTimeDate RtccTimeDate;
 rtccTimeDate RtccTimeDateVal;
@@ -120,6 +124,9 @@ int main(int argc, char** argv) {
     LATDbits.LATD1=1;                   //GPIO2
     LATGbits.LATG2=1;                   //Enable pin ESP-12E
 
+    InitESP8266();
+    ClearBuffer();
+
     for(;;){                            /* Main Bucle */
         if(vSystemLed==0){
             D3=~D3;
@@ -140,16 +147,6 @@ int main(int argc, char** argv) {
                         LATGbits.LATG2=1;                   //Enable pin ESP-12E
                         D4=1;
                     }
-                    if(U1RxBuffer.data[1]=='4'){
-                        init_uart(2,_76800);                /* Inicializacion UART2 - J9 Pins 2,4 */
-
-                    }
-                    if(U1RxBuffer.data[1]=='5'){
-                        init_uart(2,_115200);                /* Inicializacion UART2 - J9 Pins 2,4 */
-                    }
-                    break;
-                case 'C':
-                    putsUART2("AT\r\n");
                     break;
                 default:
                     putsUART(2,&U1RxBuffer.data,U1RxBuffer.bytes_total);
@@ -158,37 +155,21 @@ int main(int argc, char** argv) {
             U1RxBuffer.status=Empty;
         }
         /* Buffer de Recepcion UART2 ESP-12E */
-        if(U2RxBuffer.status == Ready){
-            
+        if(U2RxBuffer.status == Ready && vTemp==0){
+
             //putsUART(1,&U2RxBuffer.data,U2RxBuffer.bytes_total);
             putsUART1(&U2RxBuffer.data);
-            /* Utilizar librerias de parseo de cadenas */
-            /* Iniciar el modo AT */
-            /* Espera por un mensaje al inicio */
-            /* AT, esperar el OK */
-            /* AT+RST */
-            /* AT+CWMODE=1*/
-            /* AT+CWJAP="SES","WirelessSES#0123"*/
-            /* Esperar el OK*/
-
-            switch (U2RxBuffer.bytes_total){
-                case 7:
-                    if(strncmp(&U2RxBuffer.data[0],"\r\nSDK",5)==0){
+            if(strstr(&U2RxBuffer.data,"SDK")!=NULL){
+                    //if(strncmp(&U2RxBuffer.data[0],"\r\nSDK",5)==0){
                        init_uart(2,_115200);                /* Inicializacion UART2 - J9 Pins 2,4 */
-                    }
-                    break;
-                default:
-                    break;
+                       vTemp=1;
             }
-//            memset(&string,0,10);
-//            vTemp=U2RxBuffer.bytes_total;
-//            itoa(&string,vTemp,10);
-//            putsUARTx("\nRx: ");
-//            putsUART1(&string);
-//            putsUARTx(" Bytes\n");
+
             U2RxBuffer.status = Empty;
         }
-
+        if(vTemp==1){
+            ProcessESP8266();
+        }
         ClrWdt();                         //WatchDog Timer
         if(S3==0){
             vDelay_x10ms=15;
