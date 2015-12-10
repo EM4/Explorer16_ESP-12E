@@ -99,8 +99,8 @@ extern unsigned int vDelay_x10ms;
 extern unsigned int vDelay_x1ms;
 extern unsigned int vDelay_x1s;
 extern unsigned int vRFID;
-
-
+extern unsigned int ESP8266_Counter;
+extern unsigned int vTemp;
 /* Interrupt Declarations */
 void _ISRNPSV _U1RXInterrupt(void);      //interrupciones por el puerto de maquina
 void _ISRNPSV _U2RXInterrupt(void);      //interrupciones por el puerto de sistema online
