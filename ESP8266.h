@@ -12,7 +12,7 @@
 #define SSID_NAME			"SES"
 #define SSID_PASSWORD			"WirelessSES#0123"
 #define TCP                             "TCP"
-#define IP_SERVER                       "192.168.0.107"
+#define IP_SERVER                       "192.168.0.105"
 #define IP_PORT                         10005
 
 #define SWITCH_CITY_ENABLE		2
@@ -164,7 +164,7 @@ extern ESP8266_STATE ESP8266_State;
 
 extern void InitESP8266(void);
 extern void ClearBuffer(void);
-extern unsigned char ESP8266_AT_Send(unsigned char AT_Send, const char Command[]);
+extern unsigned char ESP8266_AT_Send(const char Command[]);
 extern unsigned char ESP8266_WifiSetting(void);
 extern unsigned char Find_SSID(void);
 extern unsigned char Connect_SSID(void);
