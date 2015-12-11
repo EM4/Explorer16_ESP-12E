@@ -5,4 +5,5 @@ void init_vars(void){
     vSeg=100;
     vSystemLed=0;
     vDelay=0;
+    vTemp=0;
 }

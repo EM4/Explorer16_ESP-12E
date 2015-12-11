@@ -160,5 +160,6 @@ void _ISRNPSV _T5Interrupt(void)        // control de temporizaciones cada 1ms
     /* variables de temporizacion cada 1ms*/
     if(vDelay_x1ms!=0) vDelay_x1ms--;
     if(vSystemLed!=0) vSystemLed--;
+    if(ESP8266_Counter!=0) ESP8266_Counter--;
     T5_Clear_Intr_Status_Bit; 		//clear interrupt flag
 }

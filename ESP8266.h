@@ -9,8 +9,11 @@
 #define ESP8266_CWJAP_TIMEOUT		20000
 #define ESP8266_GETWEATHER_TIMEOUT	5000
 
-#define SSID_NAME			"EM4"
-#define SSID_PASSWORD			"Montes$4186"
+#define SSID_NAME			"SES"
+#define SSID_PASSWORD			"WirelessSES#0123"
+#define TCP                             "TCP"
+#define IP_SERVER                       "192.168.0.107"
+#define IP_PORT                         10005
 
 #define SWITCH_CITY_ENABLE		2
 #define CITY_NAME_1			"Istanbul"
@@ -92,18 +95,35 @@ typedef enum
     AT_CIPSTA_TIMEOUT,
 }GET_IP_NUMBER;
 
-typedef enum
-{
-    OPENWEATHERMAP_IDLE,
+typedef enum{
+    CON_SERVER_IDLE,
     AT_CIPSTART,
     AT_CIPSTART_ANS_WAIT,
+    CON_SERVER_TIMEOUT,
+}CON_SERVER_STATE;
+
+typedef enum{
+    SEND_DATA_IDLE,
     AT_CIPSEND,
     AT_CIPSEND_ANS_WAIT,
-    GET_WEATHER,
-    GET_WEATHER_ANS_WAIT,
-    WAIT_FOR_CLOSED,
-    OPENWEATHERMAP_TIMEOUT,
-}OPENWEATHERMAP;
+    SEND_DATA,
+    SEND_DATA_ANS_WAIT,
+    SEND_DATA_TIMEOUT,
+}SEND_DATA_STATE;
+
+typedef enum{
+    WAIT_DATA_IDLE,
+    WAIT_DATA,
+    WAIT_DATA_ANS_WAIT,
+    WAIT_DATA_TIMEOUT,
+}WAIT_DATA_STATE;
+
+typedef enum{
+    DISCON_SERVER_IDLE,
+    AT_CIPCLOSE,
+    AT_CIPCLOSE_ANS_WAIT,
+    DISCON_SERVER_TIMEOUT,
+}DISCON_SERVER_STATE;
 
 typedef enum
 {
@@ -114,11 +134,14 @@ typedef enum
     ESP8266_FIND_SSID,
     ESP8266_CONNECT_SSID,
     ESP8266_RESET,
-    ESP8266_CONNECT_OK,
-    ESP8266_GET_IP,
-    ESP8266_GET_WEATHER_CITY1,
-    ESP8266_GET_WEATHER_CITY2,
-    ESP8266_GET_WEATHER_CITY3,
+    ESP8266_CHECK_WIFI,
+    ESP8266_CHECK_IP,
+    ESP8266_CONNECT_SERVER,
+    ESP8266_SEND_DATA,
+    ESP8266_WAIT_DATA,
+    ESP8266_WAIT_RESPONSE,
+    ESP8266_DISCONNECT_SERVER,
+
 }ESP8266_STATE;
 
 struct StcCity
@@ -147,10 +170,10 @@ extern unsigned char Find_SSID(void);
 extern unsigned char Connect_SSID(void);
 extern unsigned char Reset_ESP8266(void);
 extern unsigned char CheckConnection(void);
-extern unsigned char GetIPNumber(void);
-extern unsigned char OpenWeatherMap(unsigned char City_Number);
-extern void FindTemperatureValues(void);
-extern unsigned short Search_SubString(char Source[], char Target[]);
-extern unsigned char ProcessESP8266(void);
+extern unsigned char CheckIP(void);
+extern unsigned char Connect_Server(void);
+extern unsigned char Send_data(void);
+extern unsigned char Wait_data(void);
+extern unsigned char Disconnect_Server(void);
 
 #endif

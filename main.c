@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
         }
         /* Buffer de Recepcion UART2 ESP-12E */
         if(U2RxBuffer.status == Ready && vTemp==0){
-
+        //if(U2RxBuffer.status == Ready){
             //putsUART(1,&U2RxBuffer.data,U2RxBuffer.bytes_total);
             putsUART1(&U2RxBuffer.data);
             if(strstr(&U2RxBuffer.data,"SDK")!=NULL){
@@ -201,9 +201,6 @@ int main(int argc, char** argv) {
             while(U2RxBuffer.status != Ready){
                 ClrWdt();
             }
-
-            //pData = strpbrk(&U2RxBuffer.data,"+CIFSR:STAIP");
-            //pData = strstr(&U2RxBuffer.data,"+CIFSR:");
             pData = strchr(&U2RxBuffer.data,'"');
             pData2 = strchr(pData+1,'"');
             if(pData!=0 && pData2!=0){
