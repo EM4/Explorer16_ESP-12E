@@ -3,37 +3,25 @@
 #include "explorer16.h"
 
 
-AT_STATE 		At_State;
-WIFI_STATE		Wifi_State;
-SSID_STATE		SSID_State;
-CON_SSID_STATE		Con_SSID_State;
-RESET_STATE		Reset_State;
-CONNECTION_STATE	Connection_State;
-GET_IP_NUMBER		Get_Ip_State;
+AT_STATE                At_State;
+WIFI_STATE              Wifi_State;
+SSID_STATE              SSID_State;
+CON_SSID_STATE          Con_SSID_State;
+RESET_STATE             Reset_State;
+CONNECTION_STATE        Connection_State;
+GET_IP_NUMBER           Get_Ip_State;
 CON_SERVER_STATE        ConServer_State;
 SEND_DATA_STATE         SendData_State;
 WAIT_DATA_STATE         WaitData_State;
 DISCON_SERVER_STATE     DisconServer_State;
-ESP8266_STATE 		ESP8266_State;
+ESP8266_STATE           ESP8266_State;
 
-unsigned char 		ESP8266_Version[10];
-char			ESP8266_CWMODE[10];
-char			ESP8266_CIPMODE[10];
-char			ESP8266_CIPMUX[10];
-char			ESP8266_IP[20];
-unsigned short 		ESP266_Dummy_Counter;
 unsigned int            ESP8266_Counter;
-struct StcCity		City;
-unsigned int		GetWeatherCounter=0;
 
 #define ESP8266ReceiveBuffer    U2RxBuffer.data
 
 void ClearBuffer(void)
 {
-//    for(ESP266_Dummy_Counter=0;ESP266_Dummy_Counter<ESP8266_RECEIVE_BUFFER_SIZE;ESP266_Dummy_Counter++)
-//            ESP8266ReceiveBuffer[ESP266_Dummy_Counter]=0;
-//
-//    ESP8266ReceiveCounter=0;
     U2RxBuffer.bytes_total=0;
     U2RxBuffer.status=Empty;
 }
@@ -56,26 +44,22 @@ unsigned char ESP8266_AT_Send(const char Command[])
                 Return_Result=WAIT;
                 break;
             case AT_ANS_WAIT:
-                if(ESP8266_Counter==0 || strstr(ESP8266ReceiveBuffer,"ERROR")){
-                    At_State=AT_ANS_TIMEOUT;
-                    putsUART1("..TimeOut!\n");
-                }
                 if(U2RxBuffer.status == Ready){
                     if(strstr(ESP8266ReceiveBuffer,"ERROR")){
                         At_State=AT_ANS_TIMEOUT;
-                        putsUART1("..Error!\n");
+                        putsUART1("..Error!\r\n");
                     }
                     if(strcmp(ESP8266ReceiveBuffer,"AT\r\r\n\r\nOK\r\n")==0){
                         At_State=AT_IDLE;
                         Return_Result=TRUE;
                         U2RxBuffer.status == Empty;
-                        putsUART1("..OK!\n");
+                        putsUART1("..OK!\r\n");
                     }
                     ClearBuffer();
                 }else{
                     if(ESP8266_Counter==0){
                         At_State=AT_ANS_TIMEOUT;
-                        putsUART1("..TimeOut!\n");
+                        putsUART1("..TimeOut!\r\n");
                     }
                 }
                 break;
@@ -165,7 +149,6 @@ unsigned char ESP8266_WifiSetting(void)
                 if(strstr(ESP8266ReceiveBuffer,"AT+CWMODE=1")!=NULL){
                     Wifi_State=AT_CIPMODE;
                     Return_Result=WAIT;
-                    strcpy(ESP8266_CWMODE,"Station  ");
                     putsUART1("..OK1!\r\n");
                 }
                 ClearBuffer();
@@ -188,20 +171,17 @@ unsigned char ESP8266_WifiSetting(void)
             if(U2RxBuffer.status == Ready){
                 if(strstr(ESP8266ReceiveBuffer,"ERROR")){
                     Wifi_State=WIFI_ANS_TIMEOUT;
-                    strcpy(ESP8266_CIPMODE,"Error!");
                     putsUART1("..Error2!\r\n");
                 }
                 if(strstr(ESP8266ReceiveBuffer,"CIPMODE:0")!=NULL){
                     Wifi_State=AT_CIPMUX;
                     Return_Result=WAIT;
-                    strcpy(ESP8266_CIPMODE,"Normal");
                     putsUART1("..OK2!\r\n");
                 }
                 ClearBuffer();
             }else{
                 if(ESP8266_Counter==0){
                     Wifi_State=WIFI_ANS_TIMEOUT;
-                    strcpy(ESP8266_CIPMODE,"Error!");
                     putsUART1("..TimeOut2!\r\n");
                 }
             }
@@ -254,7 +234,6 @@ unsigned char Find_SSID(void)
             SSID_State=AT_CWLAP;
             Return_Result=WAIT;
             break;
-
         case AT_CWLAP:
             putsUART1("\nAT+CWLAP");
             ClearBuffer();
@@ -264,20 +243,20 @@ unsigned char Find_SSID(void)
             Return_Result=WAIT;
             break;
         case AT_CWLAP_ANS_WAIT:
-            if(U2RxBuffer.status == Ready)
-            {
+            if(U2RxBuffer.status == Ready){
+                putsUART1(&U2RxBuffer.data);
                 if(strstr(ESP8266ReceiveBuffer,"ERROR")){
                     SSID_State=SSID_ANS_TIMEOUT;
                     putsUART1("..TimeOut!\r\n");
                 }
-                if((ESP8266ReceiveBuffer,SSID_NAME)!=NULL){
+                if(strstr(ESP8266ReceiveBuffer,"EM4")!=NULL){
                     SSID_State=SSID_IDLE;
                     Return_Result=TRUE;
                     putsUART1("..Find OK!\r\n");
                 }
                 ClearBuffer();
             }else{
-                if(ESP8266_Counter==0 || strstr(ESP8266ReceiveBuffer,"ERROR")){
+                if(ESP8266_Counter==0){
                     SSID_State=SSID_ANS_TIMEOUT;
                     putsUART1("..TimeOut!\r\n");
                 }
@@ -307,24 +286,22 @@ unsigned char Connect_SSID(void)
             Return_Result=WAIT;
             break;
         case AT_CWJAP:
-            putsUART1("\nAT+CWJAP");
+            putsUART1("\nAT+CWJAP\r\n");
             ClearBuffer();
             strcat(Dummy_String,"AT+CWJAP=\"");
             strcat(Dummy_String,SSID_NAME);
             strcat(Dummy_String,"\",\"");
             strcat(Dummy_String,SSID_PASSWORD);
             strcat(Dummy_String,"\"\r\n");
-            putsUART2(Dummy_String,strlen(Dummy_String));
+            putsUART2(Dummy_String,strlen(Dummy_String));            
             Con_SSID_State	=AT_CWJAP_ANS_WAIT;
             ESP8266_Counter	=ESP8266_CWJAP_TIMEOUT;
             Return_Result=WAIT;
             break;
-
         case AT_CWJAP_ANS_WAIT:
-            
-            if(U2RxBuffer.status == Ready)
-            {
-                if(strstr(ESP8266ReceiveBuffer,"ERROR")){
+            if(U2RxBuffer.status == Ready){
+                putsUART1(&U2RxBuffer.data);
+                if(strstr(ESP8266ReceiveBuffer,"ERROR")!=NULL){
                     Con_SSID_State=CON_SSID_ANS_TIMEOUT;
                     putsUART1("..TimeOut!\r\n");
                 }
@@ -429,22 +406,26 @@ unsigned char CheckConnection(void)
             Connection_State=CHECK_STILL_CONNECTED;
             Return_Result=WAIT;
             break;
-
         case CHECK_STILL_CONNECTED:
             putsUART1("\nAT+CWJAP?");
             ClearBuffer();
             putsUART2("AT+CWJAP?\r\n");
             Connection_State=CONNECTION_ANS_WAIT;
-            ESP8266_Counter=ESP8266_TIMEOUT;
+            ESP8266_Counter=100000;
             Return_Result=WAIT;
             break;
         case CONNECTION_ANS_WAIT:
             if(U2RxBuffer.status == Ready){
-                if(strstr(ESP8266ReceiveBuffer,"ERROR")){
+                if(strstr(ESP8266ReceiveBuffer,"ERROR")!=NULL){
                     Connection_State=CONNECTION_TIMEOUT;
                     putsUART1("..Error!\r\n");
                 }
                 if(strstr(ESP8266ReceiveBuffer,SSID_NAME)!=NULL){
+                    Connection_State=CONNECTION_IDLE;
+                    Return_Result=TRUE;
+                    putsUART1("..Check OK!\r\n");
+                }
+                if(strstr(ESP8266ReceiveBuffer,"OK")!=NULL){
                     Connection_State=CONNECTION_IDLE;
                     Return_Result=TRUE;
                     putsUART1("..Check OK!\r\n");
@@ -483,8 +464,6 @@ unsigned char CheckConnection(void)
 unsigned char CheckIP(void)
 {
     unsigned char Return_Result=WAIT;
-    char Start_Address;
-    char Str_Lenght;
 
     switch(Get_Ip_State)
     {
@@ -503,16 +482,16 @@ unsigned char CheckIP(void)
             break;
         case AT_CIPSTA_ANS_WAIT:
             if(U2RxBuffer.status == Ready){
-                if(strstr(ESP8266ReceiveBuffer,"ERROR")){
+                if(strstr(ESP8266ReceiveBuffer,"ERROR")!=NULL){
                     Get_Ip_State=AT_CIPSTA_TIMEOUT;
                     putsUART1("..Error!\r\n");
                 }
-                if(strstr(ESP8266ReceiveBuffer,"+CIPSTA:")!=NULL){
-                    Start_Address=strcspn(ESP8266ReceiveBuffer,"192");
-                    Str_Lenght=strlen(ESP8266ReceiveBuffer);
+//                if(strstr(ESP8266ReceiveBuffer,"+CIPSTA:")!=NULL){
+                if(strstr(ESP8266ReceiveBuffer,"192.168.")!=NULL){
                     Get_Ip_State=AT_CIPSTA_IDLE;
                     Return_Result=TRUE;
                     putsUART1("..Get IP OK!\r\n");
+                    putsUART1(&U2RxBuffer.data);
                 }
                 ClearBuffer();
             }else{
@@ -537,7 +516,7 @@ unsigned char CheckIP(void)
     return Return_Result;
 }
 
-extern unsigned char Connect_Server(void)
+unsigned char Connect_Server(void)
 {
     unsigned char Return_Result=WAIT;
     char ServerAdd[50]="";
@@ -548,17 +527,17 @@ extern unsigned char Connect_Server(void)
             break;
 	case AT_CIPSTART:
             ClearBuffer();
-            ClearBuffer();
             strcat(ServerAdd,"AT+CIPSTART=");
             strcat(ServerAdd,"\"");
             strcat(ServerAdd,"TCP");
             strcat(ServerAdd,"\"");
             strcat(ServerAdd,",");
             strcat(ServerAdd,"\"");
-            strcat(ServerAdd,IP_SERVER);
+            strcat(ServerAdd,UBIDOTS);
             strcat(ServerAdd,"\"");
             strcat(ServerAdd,",");
-            strcat(ServerAdd,"10005\r\n");
+            strcat(ServerAdd,UBIDOTS_PORT);            
+            strcat(ServerAdd,"\r\n");
             putsUART2(ServerAdd);
             putsUART1(ServerAdd);
             ConServer_State=AT_CIPSTART_ANS_WAIT;
@@ -567,12 +546,12 @@ extern unsigned char Connect_Server(void)
             break;
         case AT_CIPSTART_ANS_WAIT:
             if(U2RxBuffer.status == Ready){
-                if(strstr(ESP8266ReceiveBuffer,"ERROR")){
+                putsUART1(&U2RxBuffer.data);
+                if(strstr(ESP8266ReceiveBuffer,"ERROR")!=NULL){
                     ConServer_State=CON_SERVER_TIMEOUT;
                     putsUART1("..Error!\r\n");
                 }
-                if(strstr(ESP8266ReceiveBuffer,"CONNECT")!=NULL)
-                {
+                if(strstr(ESP8266ReceiveBuffer,"CONNECT")!=NULL){
                     ConServer_State=CON_SERVER_IDLE;
                     Return_Result=TRUE;
                     putsUART1("..OK!\r\n");
@@ -597,8 +576,13 @@ extern unsigned char Connect_Server(void)
         return Return_Result;
 
 }
-extern unsigned char Send_data(void){
+unsigned char Send_data(void){
+    unsigned char Header[20];
+    unsigned char LongData[5];
+    unsigned char Data[250];
+    int iLongData;
     unsigned char Return_Result=WAIT;
+    
     switch(SendData_State){
         case SEND_DATA_IDLE:
             SendData_State=AT_CIPSEND;
@@ -606,15 +590,19 @@ extern unsigned char Send_data(void){
             break;
         case AT_CIPSEND:
             ClearBuffer();
-            putsUART1("AT+CIPSEND=6");
-            putsUART2("AT+CIPSEND=6\r\n");
+            putsUART1("AT+CIPSEND");
+            strcat(Header,"AT+CIPSEND=205\r\n");
+            //itoa(LongData,iLongData,10);
+            //strcat(Header,LongData);
+            //strcat(Header,"\r\n");
+            putsUART2(Header);
             SendData_State=AT_CIPSEND_ANS_WAIT;
             ESP8266_Counter=ESP8266_TIMEOUT;
             Return_Result=WAIT;
             break;
         case AT_CIPSEND_ANS_WAIT:
             if(U2RxBuffer.status==Ready){
-                if(strstr(ESP8266ReceiveBuffer,"ERROR")){
+                if(strstr(ESP8266ReceiveBuffer,"ERROR")!=NULL){
                    SendData_State=SEND_DATA_TIMEOUT;
                     putsUART1("..Error!\r\n");
                 }
@@ -622,7 +610,7 @@ extern unsigned char Send_data(void){
                 {
                     SendData_State=SEND_DATA;
                     Return_Result=WAIT;
-                    putsUART1("..OK!\r\n");
+                    putsUART1("..OK!>\r\n");
                 }
                 ClearBuffer();
             }else{
@@ -634,15 +622,23 @@ extern unsigned char Send_data(void){
             break;
         case SEND_DATA:
             ClearBuffer();
-            putsUART1("HOLA");
-            putsUART2("HOLA\r\n");
+            strcat(Data,"POST /api/v1.6/variables/566bb44e76254208c0abeedd/values HTTP/1.1\r\n");
+            strcat(Data,"Host: things.ubidots.com\r\n");
+            strcat(Data,"Content-Type: application/json\r\n");
+            strcat(Data,"X-Auth-Token: OQaKk5XmnBZiFxwensWsj1VdLqhx6m\r\n");
+            strcat(Data,"Content-Length: 12\r\n\r\n");
+            strcat(Data,"{\"value\":24}");
+            //iLongData=strlen(Data);
+            putsUART1("\nData");
+            putsUART2(Data);
             SendData_State=SEND_DATA_ANS_WAIT;
-            ESP8266_Counter=ESP8266_TIMEOUT;
+            ESP8266_Counter=1000000000;
             Return_Result=WAIT;
             break;
         case SEND_DATA_ANS_WAIT:
             if(U2RxBuffer.status == Ready){
-                if(strstr(ESP8266ReceiveBuffer,"ERROR")){
+                putsUART1(&U2RxBuffer.data);
+                if(strstr(ESP8266ReceiveBuffer,"ERROR")!=NULL){
                     SendData_State=SEND_DATA_TIMEOUT;
                     putsUART1("..Error\r\n");
                 }
@@ -671,7 +667,7 @@ extern unsigned char Send_data(void){
     }
     return Return_Result;
 }
-extern unsigned char Disconnect_Server(void){
+unsigned char Disconnect_Server(void){
     unsigned char Return_Result=WAIT;
     switch(DisconServer_State){
         case DISCON_SERVER_IDLE:
@@ -688,7 +684,7 @@ extern unsigned char Disconnect_Server(void){
             break;
         case AT_CIPCLOSE_ANS_WAIT:
             if(U2RxBuffer.status==Ready){
-                if(strstr(ESP8266ReceiveBuffer,"ERROR")){
+                if(strstr(ESP8266ReceiveBuffer,"ERROR")!=NULL){
                     DisconServer_State=DISCON_SERVER_TIMEOUT;
                     putsUART1("..Error!\r\n");
                 }
@@ -718,7 +714,7 @@ extern unsigned char Disconnect_Server(void){
     return Return_Result;
 }
 
-extern unsigned char Wait_data(void){
+unsigned char Wait_data(void){
     unsigned char Return_Result=WAIT;
     switch(WaitData_State){
         case WAIT_DATA_IDLE:
@@ -764,8 +760,8 @@ extern unsigned char Wait_data(void){
             break;
 	}
     return Return_Result;
-
 }
+
 
 unsigned char ESP8266_Error_Counter;
 	
@@ -797,14 +793,47 @@ unsigned char ProcessESP8266(void){
             break;
         case ESP8266_FIND_SSID:
             ESP8266_Result=Find_SSID();
-            if(ESP8266_Result==TRUE) ESP8266_State=ESP8266_CONNECT_SSID;
-            if(ESP8266_Result==FALSE) ESP8266_State=ESP8266_SEND_AT;
+            switch(ESP8266_Result){
+                case TRUE:
+                    ESP8266_State=ESP8266_CONNECT_SSID;
+                    break;
+                case FALSE:
+                    ESP8266_Error_Counter++;
+                    if(ESP8266_Error_Counter>10){
+                        ESP8266_State=ESP8266_SEND_AT;
+                        ESP8266_Error_Counter=0;
+                    }else{
+                        ESP8266_State=ESP8266_RESET;
+                    }
+                    break;
+                case WAIT:
+                    break;
+                default:
+                    ESP8266_State=ESP8266_RESET;
+                    break;
+            }
             break;
         case ESP8266_CONNECT_SSID:
             ESP8266_Result=Connect_SSID();
-            if(ESP8266_Result==TRUE) ESP8266_State=ESP8266_CHECK_WIFI;
-            else if(ESP8266_Result==FALSE) ESP8266_State=ESP8266_CONNECT_SSID;
-            else if(ESP8266_Result==RESET_IT) ESP8266_State=ESP8266_RESET;
+            switch(ESP8266_Result){
+                case TRUE:
+                    ESP8266_State=ESP8266_CHECK_WIFI;
+                    break;
+                case FALSE:
+                    ESP8266_Error_Counter++;
+                    if(ESP8266_Error_Counter>10){
+                        ESP8266_State=ESP8266_CONNECT_SSID;
+                        ESP8266_Error_Counter=0;
+                    }else{
+                        ESP8266_State=ESP8266_RESET;
+                    }
+                    break;
+                case WAIT:
+                    break;
+                default:
+                    ESP8266_State=ESP8266_RESET;
+                    break;
+            }
             break;
         case ESP8266_CHECK_WIFI:
             ESP8266_Result=CheckConnection();
@@ -814,7 +843,7 @@ unsigned char ProcessESP8266(void){
                     break;
                 case FALSE:
                     ESP8266_Error_Counter++;
-                    if(ESP8266_Error_Counter>3){
+                    if(ESP8266_Error_Counter>10){
                         ESP8266_State=ESP8266_RESET;
                         ESP8266_Error_Counter=0;
                     }else{
@@ -856,7 +885,7 @@ unsigned char ProcessESP8266(void){
                         ESP8266_State=ESP8266_CHECK_WIFI;
                         ESP8266_Error_Counter=0;
                     }else{
-                        ESP8266_State=ESP8266_CONNECT_SERVER;
+                        ESP8266_State=ESP8266_CHECK_IP;
                     }
                     break;
                 case WAIT:
@@ -873,7 +902,13 @@ unsigned char ProcessESP8266(void){
                     ESP8266_State=ESP8266_WAIT_DATA;
                     break;
                 case FALSE:
-                    ESP8266_State=ESP8266_DISCONNECT_SERVER;
+                    ESP8266_Error_Counter++;
+                    if(ESP8266_Error_Counter>3){
+                        ESP8266_State=ESP8266_DISCONNECT_SERVER;
+                        ESP8266_Error_Counter=0;
+                    }else{
+                        ESP8266_State=ESP8266_SEND_DATA;
+                    }
                     break;
                 case WAIT:
                     break;

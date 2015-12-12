@@ -9,16 +9,15 @@
 #define ESP8266_CWJAP_TIMEOUT		20000
 #define ESP8266_GETWEATHER_TIMEOUT	5000
 
-#define SSID_NAME			"SES"
-#define SSID_PASSWORD			"WirelessSES#0123"
-#define TCP                             "TCP"
-#define IP_SERVER                       "192.168.0.105"
-#define IP_PORT                         10005
-
-#define SWITCH_CITY_ENABLE		2
-#define CITY_NAME_1			"Istanbul"
-#define CITY_NAME_2			"Izmir"
-#define CITY_NAME_3			"London"
+#define SSID_NAME			"EM4"
+#define SSID_PASSWORD		"Montes$4186"
+#define TCP                 "TCP"
+#define IP_SERVER           "192.168.0.105"
+#define IP_PORT             "10005"
+#define UBIDOTS             "50.23.124.68"
+#define UBIDOTS_PORT        "80"
+#define UBIDOTS_VAR         "566bb44e76254208c0abeedd"
+#define UBIDOTS_TOKEN       "OQaKk5XmnBZiFxwensWsj1VdLqhx6m"
 
 #ifndef RESET_IT
 #define RESET_IT		3
@@ -144,21 +143,7 @@ typedef enum
 
 }ESP8266_STATE;
 
-struct StcCity
-{
-  char	City_Temp[10];
-  char  City_Pressure[10];
-  char 	City_Humidity[10];
-};
-
-extern unsigned char    ESP8266_Version[10];
-extern char		ESP8266_CWMODE[10];
-extern char		ESP8266_CIPMODE[10];
-extern char		ESP8266_CIPMUX[10];
-extern char		ESP8266_IP[20];
 extern unsigned int     ESP8266_Counter;
-extern struct StcCity	City;
-extern unsigned int	GetWeatherCounter;
 
 extern ESP8266_STATE ESP8266_State;
 
